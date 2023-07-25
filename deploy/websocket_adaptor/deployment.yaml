@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: websocket-adaptor
+  labels:
+    app: websocket-adaptor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: websocket-adaptor
+  template:
+    metadata:
+      name: websocket-adaptor
+      labels:
+        app: websocket-adaptor
+    spec:
+      containers:
+        - name: websocket-adaptor
+          image: websocket_adaptor
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SPOT_TRADES_SERVICE_ADDR
+              value: "event-streamer-spot-trades.default.svc.cluster.local:9000"
+            - name: SPOT_TICKERS_SERVICE_ADDR
+              value: "event-streamer-spot-tickers.default.svc.cluster.local:9000"
+            - name: HTTP_PORT
+              value: "8000"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: websocket-adaptor
+spec:
+  selector:
+    app: websocket-adaptor
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30000

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-streamer-spot-tickers
+  labels:
+    app: event-streamer-spot-tickers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-streamer-spot-tickers
+  template:
+    metadata:
+      name: event-streamer-spot-tickers
+      labels:
+        app: event-streamer-spot-tickers
+    spec:
+      containers:
+        - name: event-streamer-spot-tickers
+          image: event_streamer
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FEATURE
+              value: "SPOT_TICKER"
+            - name: GRPC_PORT
+              value: "9000"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-streamer-spot-tickers
+spec:
+  selector:
+    app: event-streamer-spot-tickers
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      

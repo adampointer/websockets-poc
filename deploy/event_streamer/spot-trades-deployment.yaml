@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-streamer-spot-trades
+  labels:
+    app: event-streamer-spot-trades
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: event-streamer-spot-trades
+  template:
+    metadata:
+      name: event-streamer-spot-trades
+      labels:
+        app: event-streamer-spot-trades
+    spec:
+      containers:
+        - name: event-streamer-spot-trades
+          image: event_streamer
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: FEATURE
+              value: "SPOT_TRADE"
+            - name: GRPC_PORT
+              value: "9000"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: event-streamer-spot-trades
+spec:
+  selector:
+    app: event-streamer-spot-trades
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      

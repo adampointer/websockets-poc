@@ -1,0 +1,19 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: websocket-poc
+build:
+  local:
+    push: false
+  artifacts:
+    - image: event_streamer
+      ko:
+        main: ./cmd/event_streamer
+    - image: websocket_adaptor
+      ko:
+        main: ./cmd/websocket_adaptor
+manifests:
+  rawYaml:
+    - deploy/event_streamer/spot-tickers-deployment.yaml
+    - deploy/event_streamer/spot-trades-deployment.yaml
+    - deploy/websocket_adaptor/deployment.yaml

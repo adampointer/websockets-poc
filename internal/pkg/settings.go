@@ -7,7 +7,7 @@ import (
 
 func GetPortFromEnv(envKey string, defaultPort int) int {
 	if strVal, found := os.LookupEnv(envKey); found {
-		if i, err := strconv.ParseInt(strVal, 10, 8); err == nil {
+		if i, err := strconv.ParseInt(strVal, 10, 16); err == nil {
 			return int(i)
 		}
 	}

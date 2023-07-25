@@ -28,7 +28,7 @@ func main() {
 
 	svr := nbhttp.NewServer(nbhttp.Config{
 		Network: "tcp",
-		Addrs:   []string{fmt.Sprintf("localhost:%d", port)},
+		Addrs:   []string{fmt.Sprintf("0.0.0.0:%d", port)},
 		Handler: mux,
 	})
 

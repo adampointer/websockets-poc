@@ -13,3 +13,7 @@ generate:
 .gitignore:
 	@wget https://www.toptal.com/developers/gitignore/api/go,goland+all,visualstudiocode -q -O .gitignore
 
+.PHONY: skaffold-install
+skaffold-install:
+	brew install skaffold
+
