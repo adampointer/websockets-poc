@@ -1,0 +1,61 @@
+syntax = 'proto3';
+package streams;
+
+import "google/protobuf/timestamp.proto";
+option go_package = "pkg/streamspb;streamspb";
+
+service EventStreamer {
+  rpc Subscribe(stream Request) returns (stream Response) {}
+}
+
+enum Action {
+  ADD = 0;
+  REMOVE = 1;
+}
+
+enum Feature {
+  SPOT_TICKER = 0;
+  SPOT_TRADE = 1;
+}
+
+message Decimal {
+  uint64 value = 1;
+  int32 exponent = 2;
+}
+
+message SubscriptionID {
+  string symbol = 1;
+  string exchange = 2;
+  Feature feature = 3;
+}
+
+message Request {
+  SubscriptionID subscription = 1;
+  Action action = 2;
+}
+
+message Response {
+  SubscriptionID subscription = 1;
+  oneof Payload {
+    Ticker ticker = 2;
+    Trade trade = 3;
+  }
+}
+
+message Ticker {
+  string exchange = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  Decimal bid = 3;
+  Decimal ask = 4;
+  Decimal bidVolume = 5;
+  Decimal askVolume = 6;
+}
+
+message Trade {
+  string exchange = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  Decimal price = 3;
+  Decimal quantity = 4;
+  bool isBuy = 5;
+  string tradeID = 6;
+}
