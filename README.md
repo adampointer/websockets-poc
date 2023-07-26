@@ -19,10 +19,10 @@ skaffold config set default-repo local
 skaffold run
 ```
 
-Run it!
+Run it! (You will get disconnected after 60s if you do not send ping frames with `/ping`)
 
 ```shell
-wscat -c 'ws://localhost/ws'
+wscat -c 'ws://localhost/ws' --slash -P
 Connected (press CTRL+C to quit)
 > {"jsonrpc" : "2.0", "id": 1, "method": "subscribe", "params": ["market:spot:tickers", { "pair": "btc_usdt", "exchange": "binance" }]}
 < {"jsonrpc": "2.0", "id": 1, "result": "123456"}

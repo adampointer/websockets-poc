@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"websocket-poc/internal/pkg"
 	"websocket-poc/pkg/streamspb"
@@ -13,6 +14,8 @@ import (
 	"github.com/lesismal/nbio/nbhttp/websocket"
 	"github.com/pkg/errors"
 )
+
+const keepaliveTimeout = 60 * time.Second
 
 type sessionState struct {
 	sessionID uuid.UUID
@@ -70,12 +73,23 @@ func upgrade() *websocket.Upgrader {
 			},
 			Action: streamspb.Action_ADD,
 		}
+
+		if err := c.SetReadDeadline(time.Now().Add(keepaliveTimeout)); err != nil {
+			log.Fatal(err)
+		}
 	})
 
 	u.OnClose(func(c *websocket.Conn, err error) {
 		state := c.Session().(*sessionState)
 		sessions.remove(state.sessionID)
 		log.Println("OnClose:", c.RemoteAddr().String(), err)
+	})
+
+	u.SetPingHandler(func(c *websocket.Conn, s string) {
+		log.Println("ping")
+		if err := c.SetReadDeadline(time.Now().Add(keepaliveTimeout)); err != nil {
+			log.Fatal(err)
+		}
 	})
 	return u
 }
