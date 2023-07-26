@@ -43,3 +43,5 @@ manifests:
     - deploy/spot-trades-service.yaml
     - deploy/websocket-adaptor-service.yaml
     - deploy/ingress.yaml
+    - deploy/grafana.yaml
+    - deploy/prometheus.yaml

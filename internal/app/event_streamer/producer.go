@@ -10,11 +10,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-const messageRate = 100 * time.Millisecond
+const messageRate = time.Millisecond
 
 var (
-	symbols   = []string{"btc_usdt", "eth_usdt", "xrp_usdt"}
-	exchanges = []string{"bitmex", "binance", "bitfinex"}
+	symbols   = []string{"btc_usdt", "eth_usdt", "xrp_usdt", "ada_usdt", "doge_usdt", "shib_usdt", "sol_usdt", "ldo_usdt", "avax_usdt", "fil_usdt"}
+	exchanges = []string{"bitmex", "binance", "bitfinex", "deribit", "kraken", "kucoin", "coinbase", "okx", "bitstamp", "huobi"}
 )
 
 type Publisher interface {
@@ -41,9 +41,9 @@ func ProduceMessages(pub Publisher, feature streamspb.Feature) {
 					Exchange:  exchanges[exchange],
 					Timestamp: timestamppb.New(time.Now()),
 					Bid:       &streamspb.Decimal{Value: 1, Exponent: -2},
-					Ask:       &streamspb.Decimal{Value: 11, Exponent: -2},
-					BidVolume: &streamspb.Decimal{Value: 1, Exponent: 2},
-					AskVolume: &streamspb.Decimal{Value: 1, Exponent: 3},
+					Ask:       &streamspb.Decimal{Value: 11, Exponent: -1},
+					BidVolume: &streamspb.Decimal{Value: 478, Exponent: 1},
+					AskVolume: &streamspb.Decimal{Value: 34, Exponent: 2},
 				},
 			}
 		case streamspb.Feature_SPOT_TRADE:
@@ -52,7 +52,7 @@ func ProduceMessages(pub Publisher, feature streamspb.Feature) {
 					Exchange:  exchanges[exchange],
 					Timestamp: timestamppb.New(time.Now()),
 					Price:     &streamspb.Decimal{Value: 1, Exponent: -2},
-					Quantity:  &streamspb.Decimal{Value: 1, Exponent: 0},
+					Quantity:  &streamspb.Decimal{Value: 56, Exponent: 0},
 					IsBuy:     false,
 					TradeID:   uuid.NewString(),
 				},
