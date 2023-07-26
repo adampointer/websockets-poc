@@ -1,61 +1,78 @@
 package pkg
 
 import (
-	"log"
 	"sync"
 
 	"websocket-poc/pkg/streamspb"
-
-	"google.golang.org/protobuf/encoding/protojson"
 )
+
+type key struct {
+	symbol, exchange string
+	feature          streamspb.Feature
+}
+
+func keyFromProto(proto *streamspb.SubscriptionID) key {
+	return key{
+		symbol:   proto.Symbol,
+		exchange: proto.Exchange,
+		feature:  proto.Feature,
+	}
+}
+
+func keyToProto(k key) *streamspb.SubscriptionID {
+	return &streamspb.SubscriptionID{
+		Symbol:   k.symbol,
+		Exchange: k.exchange,
+		Feature:  k.feature,
+	}
+}
 
 type Subscriptions struct {
 	lock          sync.RWMutex
-	subscriptions map[string]uint16
+	subscriptions map[key]uint32
 }
 
 func NewSubscriptions() *Subscriptions {
 	return &Subscriptions{
 		lock:          sync.RWMutex{},
-		subscriptions: make(map[string]uint16),
+		subscriptions: make(map[key]uint32),
 	}
 }
 
-func (s *Subscriptions) Add(key *streamspb.SubscriptionID) {
-	keyStr := keyToString(key)
+func (s *Subscriptions) Add(sub *streamspb.SubscriptionID) {
+	k := keyFromProto(sub)
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if count, exists := s.subscriptions[keyStr]; exists {
-		s.subscriptions[keyStr] = count + 1
+	if count, exists := s.subscriptions[k]; exists {
+		s.subscriptions[k] = count + 1
 	} else {
-		s.subscriptions[keyStr] = 1
+		s.subscriptions[k] = 1
 	}
 }
 
-func (s *Subscriptions) Remove(key *streamspb.SubscriptionID) {
-	keyStr := keyToString(key)
+func (s *Subscriptions) Remove(sub *streamspb.SubscriptionID) {
+	k := keyFromProto(sub)
 
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	if count, exists := s.subscriptions[keyStr]; exists {
+	if count, exists := s.subscriptions[k]; exists {
 		if count == 1 {
-			delete(s.subscriptions, keyStr)
+			delete(s.subscriptions, k)
 		} else {
-			s.subscriptions[keyStr] = count - 1
+			s.subscriptions[k] = count - 1
 		}
 	}
 }
 
-func (s *Subscriptions) ForEach(f func(id *streamspb.SubscriptionID)) {
-	for keyStr, count := range s.subscriptions {
+func (s *Subscriptions) ForEach(f func(sub *streamspb.SubscriptionID)) {
+	for k, count := range s.subscriptions {
 		if count < 1 {
 			continue
 		}
-		key := keyFromString(keyStr)
-		f(key)
+		f(keyToProto(k))
 	}
 }
 
@@ -70,25 +87,9 @@ func (s *Subscriptions) HasSubscription(sub *streamspb.SubscriptionID) bool {
 		Exchange: "all",
 		Feature:  sub.Feature,
 	}
-	_, matchesSymbol := s.subscriptions[keyToString(symbolWildcard)]
-	_, matchesExchange := s.subscriptions[keyToString(exchangeWildcard)]
-	_, matchesExactly := s.subscriptions[keyToString(sub)]
+	_, matchesSymbol := s.subscriptions[keyFromProto(symbolWildcard)]
+	_, matchesExchange := s.subscriptions[keyFromProto(exchangeWildcard)]
+	_, matchesExactly := s.subscriptions[keyFromProto(sub)]
 
 	return matchesExchange || matchesSymbol || matchesExactly
-}
-
-func keyToString(key *streamspb.SubscriptionID) string {
-	bs, err := protojson.Marshal(key)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return string(bs)
-}
-
-func keyFromString(keyStr string) *streamspb.SubscriptionID {
-	var out streamspb.SubscriptionID
-	if err := protojson.Unmarshal([]byte(keyStr), &out); err != nil {
-		log.Fatal(err)
-	}
-	return &out
 }

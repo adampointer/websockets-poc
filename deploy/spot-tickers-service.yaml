@@ -2,10 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: event-streamer-spot-tickers
+  namespace: marketdata
   labels:
     app: event-streamer-spot-tickers
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: event-streamer-spot-tickers
@@ -30,11 +31,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: event-streamer-spot-tickers
+  namespace: marketdata
 spec:
   selector:
     app: event-streamer-spot-tickers
   ports:
-    - protocol: TCP
+    - name: grpc
+      protocol: TCP
       port: 9000
       targetPort: 9000
       

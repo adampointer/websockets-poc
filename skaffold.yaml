@@ -12,8 +12,34 @@ build:
     - image: websocket_adaptor
       ko:
         main: ./cmd/websocket_adaptor
+deploy:
+  helm:
+    releases:
+      - name: istio-base
+        wait: true
+        remoteChart: base
+        createNamespace: true
+        namespace: istio-system
+        repo: https://istio-release.storage.googleapis.com/charts
+        version: 1.18.1
+      - name: istiod
+        wait: true
+        remoteChart: istiod
+        createNamespace: true
+        namespace: istio-system
+        repo: https://istio-release.storage.googleapis.com/charts
+        version: 1.18.1
+      - name: istio-ingress
+        wait: true
+        remoteChart: gateway
+        createNamespace: true
+        namespace: istio-ingress
+        repo: https://istio-release.storage.googleapis.com/charts
+        version: 1.18.1
 manifests:
   rawYaml:
-    - deploy/event_streamer/spot-tickers-deployment.yaml
-    - deploy/event_streamer/spot-trades-deployment.yaml
-    - deploy/websocket_adaptor/deployment.yaml
+    - deploy/namespace.yaml
+    - deploy/spot-tickers-service.yaml
+    - deploy/spot-trades-service.yaml
+    - deploy/websocket-adaptor-service.yaml
+    - deploy/ingress.yaml
