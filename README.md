@@ -28,3 +28,14 @@ Connected (press CTRL+C to quit)
 < {"jsonrpc": "2.0", "id": 1, "result": "123456"}
 < {"jsonrpc":"2.0","id":1,"method":"subscription","params":{"subscription":"1223456","result":{"exchange":"binance","timestamp":1690297936009,"bid":0.01,"ask":0.11,"bidVolume":100,"askVolume":1000}}}
 ```
+
+## Monitoring
+
+```shell
+kubectl -n istio-system port-forward deployment/grafana 3000:3000
+kubectl -n istio-system port-forward deployment/prometheus 9090:9090
+```
+
+Import the Go Processes dashboard - https://grafana.com/grafana/dashboards/6671-go-processes/
+
+Latency query (p95): `histogram_quantile(0.95, sum by(le) (rate(websocket_adaptor_latency_bucket{app="websocket-adaptor"}[$__rate_interval])))`
