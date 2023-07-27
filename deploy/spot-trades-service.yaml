@@ -15,6 +15,11 @@ spec:
       name: event-streamer-spot-trades
       labels:
         app: event-streamer-spot-trades
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+        prometheus.istio.io/merge-metrics: "false"
     spec:
       containers:
         - name: event-streamer-spot-trades
@@ -40,4 +45,8 @@ spec:
       protocol: TCP
       port: 9000
       targetPort: 9000
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
       

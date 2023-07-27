@@ -25,6 +25,7 @@ func main() {
 
 	mux := &http.ServeMux{}
 	mux.HandleFunc("/ws", websocket_adaptor.OnWebsocket(ctx))
+	mux.Handle("/metrics", websocket_adaptor.MetricsHandler())
 
 	svr := nbhttp.NewServer(nbhttp.Config{
 		Network: "tcp",

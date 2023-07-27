@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 
 	"websocket-poc/internal/app/event_streamer"
@@ -14,27 +15,35 @@ import (
 )
 
 const (
-	defaultPort    = 9090
-	defaultFeature = streamspb.Feature_SPOT_TICKER
+	defaultGrpcPort = 9090
+	defaultHttpPort = 8080
+	defaultFeature  = streamspb.Feature_SPOT_TICKER
 )
 
 func main() {
-	port := pkg.GetPortFromEnv("GRPC_PORT", defaultPort)
+	grpcPort := pkg.GetPortFromEnv("GRPC_PORT", defaultGrpcPort)
+	httpPort := pkg.GetPortFromEnv("HTTP_PORT", defaultHttpPort)
+
 	feature := getFeatureFromEnv()
 	log.Printf("starting streamer for feature %s\n", feature.String())
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", grpcPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	log.Printf("listening on %d\n", port)
+	log.Printf("listening on %d\n", grpcPort)
 
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	srv := event_streamer.NewServer()
 	go event_streamer.ProduceMessages(srv, feature)
 	streamspb.RegisterEventStreamerServer(grpcServer, srv)
+
+	go func() {
+		http.Handle("/metrics", event_streamer.MetricsHandler())
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", httpPort), nil))
+	}()
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("error starting server")

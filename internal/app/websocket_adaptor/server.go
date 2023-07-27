@@ -90,35 +90,37 @@ func upgrade() *websocket.Upgrader {
 		if err := c.SetReadDeadline(time.Now().Add(keepaliveTimeout)); err != nil {
 			log.Fatal(err)
 		}
+		if err := c.WriteMessage(websocket.PongMessage, []byte("pong")); err != nil {
+			log.Fatal(err)
+		}
 	})
 	return u
 }
 
 func session(dataC chan *streamspb.Response, controlC chan *streamspb.Request, client *streamerClient, conn *websocket.Conn) {
 	state := pkg.NewSubscriptions()
+	stopC := make(chan struct{})
 
 	for {
 		select {
 		case data := <-dataC:
-			if data == nil {
-				return
-			}
 			if err := onDataMessage(state, data, conn); err != nil {
 				log.Fatal(errors.Wrap(err, "on data message"))
 			}
 
 		case message := <-controlC:
-			if message == nil {
-				return
-			}
-			if err := onControlMessage(state, message, client); err != nil {
+			if err := onControlMessage(state, message, client, stopC); err != nil {
 				log.Fatal(errors.Wrap(err, "on control message"))
 			}
+		case <-stopC:
+			close(controlC)
+			close(dataC)
+			return
 		}
 	}
 }
 
-func onControlMessage(state *pkg.Subscriptions, message *streamspb.Request, client *streamerClient) error {
+func onControlMessage(state *pkg.Subscriptions, message *streamspb.Request, client *streamerClient, stopC chan struct{}) error {
 	switch message.Action {
 	case streamspb.Action_ADD:
 		log.Printf("adding %s\n", message.String())
@@ -136,6 +138,7 @@ func onControlMessage(state *pkg.Subscriptions, message *streamspb.Request, clie
 					log.Fatal(errors.Wrap(err, "remove subscription from remote"))
 				}
 			})
+			close(stopC)
 		} else {
 			state.Remove(message.Subscription)
 			if err := client.removeSubscription(message.Subscription); err != nil {

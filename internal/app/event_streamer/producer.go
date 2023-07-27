@@ -39,7 +39,7 @@ func ProduceMessages(pub Publisher, feature streamspb.Feature) {
 			response.Payload = &streamspb.Response_Ticker{
 				Ticker: &streamspb.Ticker{
 					Exchange:  exchanges[exchange],
-					Timestamp: timestamppb.New(time.Now()),
+					Timestamp: timestamppb.New(time.Now().UTC()),
 					Bid:       &streamspb.Decimal{Value: 1, Exponent: -2},
 					Ask:       &streamspb.Decimal{Value: 11, Exponent: -1},
 					BidVolume: &streamspb.Decimal{Value: 478, Exponent: 1},
@@ -50,7 +50,7 @@ func ProduceMessages(pub Publisher, feature streamspb.Feature) {
 			response.Payload = &streamspb.Response_Trade{
 				Trade: &streamspb.Trade{
 					Exchange:  exchanges[exchange],
-					Timestamp: timestamppb.New(time.Now()),
+					Timestamp: timestamppb.New(time.Now().UTC()),
 					Price:     &streamspb.Decimal{Value: 1, Exponent: -2},
 					Quantity:  &streamspb.Decimal{Value: 56, Exponent: 0},
 					IsBuy:     false,

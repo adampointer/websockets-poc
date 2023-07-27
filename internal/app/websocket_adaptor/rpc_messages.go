@@ -2,7 +2,7 @@ package websocket_adaptor
 
 import (
 	"encoding/json"
-
+	"time"
 	"websocket-poc/pkg/streamspb"
 
 	"github.com/pkg/errors"
@@ -83,6 +83,9 @@ func marshalRpcResponse(data *streamspb.Response) ([]byte, error) {
 		},
 	}
 
+	now := time.Now().UTC().UnixMilli()
+	var then time.Time
+
 	if data.GetTicker() != nil {
 		t := data.GetTicker()
 		rpcResponse.Params.Result = &ticker{
@@ -93,6 +96,7 @@ func marshalRpcResponse(data *streamspb.Response) ([]byte, error) {
 			BidVolume: fromProtoDecimal(t.BidVolume),
 			AskVolume: fromProtoDecimal(t.AskVolume),
 		}
+		then = t.Timestamp.AsTime()
 	} else if data.GetTrade() != nil {
 		t := data.GetTrade()
 		rpcResponse.Params.Result = &trade{
@@ -103,10 +107,16 @@ func marshalRpcResponse(data *streamspb.Response) ([]byte, error) {
 			IsBuy:     t.IsBuy,
 			TradeID:   t.TradeID,
 		}
+		then = t.Timestamp.AsTime()
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal protobuf payload")
 	}
+
+	go func() {
+		latency := now - then.UnixMilli()
+		latencyHistogram.Observe(float64(latency))
+	}()
 
 	return json.Marshal(rpcResponse)
 }
